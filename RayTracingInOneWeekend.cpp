@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <io.h>
 #include "include/vec3.h"
 #include "include/ray.h"
@@ -192,8 +193,8 @@ int Ch5NormalsAndMultipleObj(){
     return 0;
 }
 
-//Ch6: multi-object and ray
-int Ch6MultiObjHitableWith_tRange(){
+//Ch5: multi-object and ray
+int Ch5MultiObjHitableWith_tRange(){
     auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
         //根据光线击中的最近点，进行渲染着色
@@ -207,7 +208,7 @@ int Ch6MultiObjHitableWith_tRange(){
         } 
     };
     
-    std::string imgFilePath("Image06_with_tRange.ppm");
+    std::string imgFilePath("Image05_with_tRange.ppm");
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -243,9 +244,9 @@ int Ch6MultiObjHitableWith_tRange(){
 }
 
 
-//Ch7: Antialiasing 
-int Ch7Antialiasing(){
-        auto getColor = [&](const ray&r,hitable *world) -> vec3{
+//Ch6: Antialiasing 
+int Ch6Antialiasing(){
+    auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
         //根据光线击中的最近点，进行渲染着色
         if(world -> hit(r,0.0,g_MAX_FLOAT,reco)){
@@ -258,7 +259,7 @@ int Ch7Antialiasing(){
         } 
     };
     
-    std::string imgFilePath("Image07_AntiAliasing.ppm");
+    std::string imgFilePath("Image06_AntiAliasing.ppm");
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -274,7 +275,7 @@ int Ch7Antialiasing(){
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
     list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60); 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
-    camera cam;
+    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = g_Width -1; i >= 0; --i){
             vec3 color(0,0,0);
@@ -297,6 +298,67 @@ int Ch7Antialiasing(){
     return 0;
 }
 
+int Ch7DiffuseMaterial(){
+    auto random_in_unit_sphere = [&](){
+        vec3 p;
+        do{
+            p = 2.0 * vec3(random_double(),random_double(),random_double()) - vec3(1,1,1);
+        }while (p.length_squared() >= 1.0);
+        return p;
+    };
+    using getColorFuncType = std::function<vec3(const ray&r,hitable *world)>;
+    getColorFuncType getColor = [&](const ray&r,hitable *world) -> vec3{
+        hit_record reco;
+        //根据光线击中的最近点，进行渲染着色
+        if(world -> hit(r,0.0,g_MAX_FLOAT,reco)){
+            vec3 target = reco.p_ + reco.normal_ + random_in_unit_sphere();
+            return 0.5* getColor(ray(reco.p_,target-reco.p_),world);
+        }
+        else{
+            vec3 unit_direction = unit_vector(r.direction());
+            float t = 0.5 * (unit_direction.y() + 1.0);
+            return (1.0 - t) * vec3(1.0,1.0,1.0) + t *vec3(0.5,0.7,1.0);  
+        } 
+    };
+    
+
+    std::string imgFilePath("Image07_DiffuseMaterial.ppm");
+    if(access(imgFilePath.c_str(),0) == 0){
+        std::remove(imgFilePath.c_str());
+    }
+    std::ofstream imageFile(imgFilePath);
+    imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
+    vec3 lower_left_corner_P(-2.0,-1.0,-1.0);
+    vec3 horizontalDir(4.0,0.0,0.0);
+    vec3 verticalDir(0.0,2.0,0.0);
+    vec3 originP(0.0,0.0,0.0);
+
+// multi-object
+    std::shared_ptr<hitable> list[2];
+    list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60); 
+    std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
+    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    for(int j = g_Height -1 ; j >= 0 ; --j){
+        for(int i = g_Width -1; i >= 0; --i){
+            vec3 color(0,0,0);
+            for(int s = 0; s< g_RayNums ; ++s){
+                float u = float(i + random_double())/ float(g_Width);
+                float v = float(j + random_double())/ float(g_Height);
+                ray r = cam.get_ray(u,v);
+                color += getColor(r,world.get());
+            }
+            color /= float(g_RayNums);
+            int ir = int(255.99 * color.r());
+            int ig = int(255.99 * color.g());
+            int ib = int(255.99 * color.b());
+            imageFile << ir << " " << ig << " " << ib << "\n"; 
+        }
+    }
+    imageFile.close();
+    std::cout<< imgFilePath;   
+    return 0;
+}
 
 int main(int argc,char* argv[]){
     std::cout << "OutputImage: \n" ;
@@ -305,7 +367,8 @@ int main(int argc,char* argv[]){
     //Ch3SimpleCamImage();
     //Ch4AddSphere();
     //Ch5NormalsAndMultipleObj();
-    //Ch6MultiObjHitableWith_tRange();
-    Ch7Antialiasing();
+    //Ch5MultiObjHitableWith_tRange();
+    //Ch6Antialiasing();
+    Ch7DiffuseMaterial();
     return 0;
 }
