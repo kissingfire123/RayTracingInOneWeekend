@@ -65,6 +65,8 @@
     "streambuf": "cpp",
     "typeinfo": "cpp",
     "condition_variable": "cpp",
-    "mutex": "cpp"
+    "mutex": "cpp",
+    "functional": "cpp",
+    "iterator": "cpp"
   }
 }

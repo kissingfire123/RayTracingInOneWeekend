@@ -7,11 +7,13 @@
 #include "include/sphere.h"
 #include "include/hitable_list.h"
 #include "include/camera.h"
+#include "include/material.h"
 
 const static int g_Width = 800;
 const static int g_Height = 400;
 const static int g_MAX_FLOAT = 1000.0;
 const static int g_RayNums = 100;
+const static int g_DepthThreshold = 50;
 
 int Ch1OutputImage(){
     std::ofstream imageFile("Image01.ppm");
@@ -222,7 +224,7 @@ int Ch5MultiObjHitableWith_tRange(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
 
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -273,9 +275,9 @@ int Ch6Antialiasing(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
-    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//Ch6: 多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = g_Width -1; i >= 0; --i){
             vec3 color(0,0,0);
@@ -298,7 +300,9 @@ int Ch6Antialiasing(){
     return 0;
 }
 
+//Ch7: 模拟杂乱无章随机的漫反射
 int Ch7DiffuseMaterial(){
+    // Ch7:取单位半径球内的任意一点vec3(x,y,z),用作表现反射的随机性
     auto random_in_unit_sphere = [&](){
         vec3 p;
         do{
@@ -309,10 +313,10 @@ int Ch7DiffuseMaterial(){
     using getColorFuncType = std::function<vec3(const ray&r,hitable *world)>;
     getColorFuncType getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
-        //根据光线击中的最近点，进行渲染着色
-        if(world -> hit(r,0.0,g_MAX_FLOAT,reco)){
-            vec3 target = reco.p_ + reco.normal_ + random_in_unit_sphere();
-            return 0.5* getColor(ray(reco.p_,target-reco.p_),world);
+        //Ch6:根据光线击中的最近点，进行渲染着色
+        if(world -> hit(r,0.001,g_MAX_FLOAT,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
+            vec3 target = reco.p_ + reco.normal_ + random_in_unit_sphere();//Ch7:p_+normal_得到hit-point的球心，再随机选个方向作为反射关系
+            return 0.5* getColor(ray(reco.p_,target-reco.p_),world);//Ch7:递归调用，即多次反射，直到hit-miss
         }
         else{
             vec3 unit_direction = unit_vector(r.direction());
@@ -336,7 +340,7 @@ int Ch7DiffuseMaterial(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
     camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -360,6 +364,70 @@ int Ch7DiffuseMaterial(){
     return 0;
 }
 
+
+int Ch8MaterialMetal(){
+   //Ch8: modify getColor()
+   using getColorFuncType = std::function<vec3(const ray&r,hitable *world,int depth)>;
+    getColorFuncType getColor = [&](const ray&r,hitable *world,int depth) -> vec3{
+        hit_record reco;
+        //Ch6:根据光线击中的最近点，进行渲染着色
+        if(world -> hit(r,0.001,g_MAX_FLOAT,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
+            ray scattered;
+            vec3 attenuation;
+            if(depth < g_DepthThreshold && reco.mate_ptr->scatter(r,reco,attenuation,scattered)){
+                return attenuation *getColor(scattered,world,depth + 1);//递归,继续反射
+            }
+            else{
+                return vec3(0,0,0);
+            }
+        }
+        else{
+            vec3 unit_direction = unit_vector(r.direction());
+            float t = 0.5 * (unit_direction.y() + 1.0);
+            return (1.0 - t) * vec3(1.0,1.0,1.0) + t *vec3(0.5,0.7,1.0);  
+        } 
+    };
+    
+
+    std::string imgFilePath("Image08_MetalMaterial.ppm");
+    if(access(imgFilePath.c_str(),0) == 0){
+        std::remove(imgFilePath.c_str());
+    }
+    std::ofstream imageFile(imgFilePath);
+    imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
+    vec3 lower_left_corner_P(-2.0,-1.0,-1.0);
+    vec3 horizontalDir(4.0,0.0,0.0);
+    vec3 verticalDir(0.0,2.0,0.0);
+    vec3 originP(0.0,0.0,0.0);
+
+// multi-object
+    std::shared_ptr<hitable> list[4];
+    list[0] = std::make_shared<sphere>(vec3(0,0,-1),     0.5,std::make_shared<lambertian>(vec3(0.8,0.3,0.3)));
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0,std::make_shared<lambertian>(vec3(0.8,0.8,0.3))); 
+    list[2] = std::make_shared<sphere>(vec3(1,0,-1),    60.0,std::make_shared<metal>(vec3(0.8,0.6,0.2))); 
+    list[3] = std::make_shared<sphere>(vec3(-1,0,1),    60.0,std::make_shared<metal>(vec3(0.8,0.8,0.8))); 
+    std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,4);
+    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    for(int j = g_Height -1 ; j >= 0 ; --j){
+        for(int i = g_Width -1; i >= 0; --i){
+            vec3 color(0,0,0);
+            for(int s = 0; s< g_RayNums ; ++s){
+                float u = float(i + random_double())/ float(g_Width);
+                float v = float(j + random_double())/ float(g_Height);
+                ray r = cam.get_ray(u,v);
+                color += getColor(r,world.get(),0);
+            }
+            color /= float(g_RayNums);
+            int ir = int(255.99 * color.r());
+            int ig = int(255.99 * color.g());
+            int ib = int(255.99 * color.b());
+            imageFile << ir << " " << ig << " " << ib << "\n"; 
+        }
+    }
+    imageFile.close();
+    std::cout<< imgFilePath;   
+    return 0;
+}
 int main(int argc,char* argv[]){
     std::cout << "OutputImage: \n" ;
     //Ch1OutputImage();
@@ -369,6 +437,7 @@ int main(int argc,char* argv[]){
     //Ch5NormalsAndMultipleObj();
     //Ch5MultiObjHitableWith_tRange();
     //Ch6Antialiasing();
-    Ch7DiffuseMaterial();
+    //Ch7DiffuseMaterial();
+    Ch8MaterialMetal();
     return 0;
 }

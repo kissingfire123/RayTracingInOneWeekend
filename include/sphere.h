@@ -2,15 +2,19 @@
 #define _SPHERE_H_
 
 #include "hitable.h"
-
+class lambertian;
 class sphere:public hitable{
 public:
     sphere(){}
-    sphere(vec3 cen,float r):center_(cen),radius_(r){}
+    sphere(vec3 cen,float r,std::shared_ptr<lambertian> lambert = nullptr):
+        center_(cen),
+        radius_(r),
+        lambert_(lambert){}
     virtual bool hit(const ray& r, float tmin,float tmax,hit_record& rec)const override; 
 private:
     vec3 center_;
     float radius_;
+    std::shared_ptr<lambertian> lambert_;
 };
 
 bool sphere::hit(const ray& r, float tmin,float tmax,hit_record& reco) const{
