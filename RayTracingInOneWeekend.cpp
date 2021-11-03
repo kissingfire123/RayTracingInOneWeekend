@@ -2,21 +2,59 @@
 #include <fstream>
 #include <functional>
 #include <io.h>
-#include "include/vec3.h"
-#include "include/ray.h"
-#include "include/sphere.h"
-#include "include/hitable_list.h"
-#include "include/camera.h"
-#include "include/material.h"
+#include <chrono>
+
+#include "progress.h"
+#include "vec3.h"
+#include "ray.h"
+#include "sphere.h"
+#include "hitable_list.h"
+#include "camera.h"
+#include "material.h"
+
+//Declaration
+int Ch1OutputImage(std::string imgFilePath);
+int Ch2OutputImage(std::string imgFilePath);
+int Ch3SimpleCamImage(std::string imgFilePath);
+int Ch4AddSphere(std::string imgFilePath);
+int Ch5NormalsAndMultipleObj(std::string imgFilePath);
+int Ch5MultiObjHitableWith_tRange(std::string imgFilePath);
+int Ch6Antialiasing(std::string imgFilePath);
+int Ch7DiffuseMaterial(std::string imgFilePath);
+int Ch8MaterialMetal(std::string imgFilePath);
+
 
 const static int g_Width = 800;
 const static int g_Height = 400;
-const static int g_MAX_FLOAT = 1000.0;
+const static int g_MAX_FLOAT = 1000;
 const static int g_RayNums = 100;
 const static int g_DepthThreshold = 50;
 
-int Ch1OutputImage(){
-    std::ofstream imageFile("Image01.ppm");
+
+int main(int argc, char* argv[]) { 
+#ifdef _DEBUG
+    std::cout << "Now running model is Debug\n";  // debug enable
+#else
+    std::cout << "Now running model is Release\n";// more faster
+#endif
+    //以下每个Chx...函数都可以单独运行,互不影响,可以屏蔽其中任意几个单独运行其他的 
+
+    Ch1OutputImage("Image01.ppm");
+    Ch2OutputImage("Image02.ppm");
+    Ch3SimpleCamImage("Image03.ppm");
+    Ch4AddSphere("Image04_add_sphere.ppm");
+    Ch5NormalsAndMultipleObj("Image05_normals.ppm");
+    Ch5MultiObjHitableWith_tRange("Image05_with_tRange.ppm");
+    Ch6Antialiasing("Image06_AntiAliasing.ppm");
+    Ch7DiffuseMaterial("Image07_DiffuseMaterial.ppm");
+    Ch8MaterialMetal("Image08_MetalMaterial.ppm");
+
+    return 0;
+}
+
+int Ch1OutputImage(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath,g_Height);
+    std::ofstream imageFile(imgFilePath);
     
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -29,14 +67,16 @@ int Ch1OutputImage(){
             int ib = int(255.99 * b);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
     return 0;
 }
 
 //the vec3 class
-int Ch2OutputImage(){
-    std::ofstream imageFile("Image02.ppm");
+int Ch2OutputImage(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
+    std::ofstream imageFile(imgFilePath);
 
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -47,6 +87,7 @@ int Ch2OutputImage(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
 
     imageFile.close();
@@ -56,14 +97,15 @@ int Ch2OutputImage(){
 //rays,a simple camera,and background
 // P = Origin + t * Direction
 // coordinate: top:y+  , right: x+  , outPcScreen: z+
-int Ch3SimpleCamImage(){
+int Ch3SimpleCamImage(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     auto getColor = [](const ray&r) -> vec3{
       vec3 unit_direction = unit_vector(r.direction()); 
       float t = 0.5 * (unit_direction.y() + 1.0);
       return (1.0 - t) * vec3(1.0,1.0,1.0) + t *vec3(0.5,0.7,1.0);  
     }; 
 
-    std::ofstream imageFile("Image03.ppm");
+    std::ofstream imageFile(imgFilePath);
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     vec3 lower_left_corner_P(-2.0,-1.0,-1.0);
     vec3 horizontalDir(4.0,0.0,0.0);
@@ -82,6 +124,7 @@ int Ch3SimpleCamImage(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
     return 0; 
@@ -91,7 +134,8 @@ int Ch3SimpleCamImage(){
 // 2. point_P , circleCenter_C,vector_length(p-c) = radius_R
 //    dot((A​​ + t*​B ​- ​C​),(​A​ + t*​B​ - ​C​)) = R*R
 // 3. t*t*dot(B​ ​,​B​) + 2*t*dot(​B,A​-​C​) + dot(​A-C,A​-​C​) - R*R = 0
-int Ch4AddSphere(){
+int Ch4AddSphere(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     //resolve: either hit a sphere,
     auto hit_sphere = [](const vec3& center, float radius,const ray& r)-> bool{
         vec3 ac = r.origin() - center; // vector(A-C)
@@ -112,7 +156,7 @@ int Ch4AddSphere(){
       return (1.0 - t) * vec3(1.0,1.0,1.0) + t *vec3(0.5,0.7,1.0);  
     }; 
 
-    std::ofstream imageFile("Image04_add_sphere.ppm");
+    std::ofstream imageFile(imgFilePath);
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     vec3 lower_left_corner_P(-2.0,-1.0,-1.0);
     vec3 horizontalDir(4.0,0.0,0.0);
@@ -133,14 +177,15 @@ int Ch4AddSphere(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
-
     return 0;
 }
 
 // Ch5 Suface normals and multiple objects
-int Ch5NormalsAndMultipleObj(){
+int Ch5NormalsAndMultipleObj(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     //resolve: either hit a sphere,get delta
     auto hit_sphere = [](const vec3& center, float radius,const ray& r)-> float{
         vec3 ac = r.origin() - center; // vector(A-C)
@@ -168,7 +213,7 @@ int Ch5NormalsAndMultipleObj(){
     }; 
 
 
-    std::ofstream imageFile("Image05_normals.ppm");
+    std::ofstream imageFile(imgFilePath);
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     vec3 lower_left_corner_P(-2.0,-1.0,-1.0);
     vec3 horizontalDir(4.0,0.0,0.0);
@@ -189,14 +234,15 @@ int Ch5NormalsAndMultipleObj(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
-    
     return 0;
 }
 
 //Ch5: multi-object and ray
-int Ch5MultiObjHitableWith_tRange(){
+int Ch5MultiObjHitableWith_tRange(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
         //根据光线击中的最近点，进行渲染着色
@@ -210,7 +256,6 @@ int Ch5MultiObjHitableWith_tRange(){
         } 
     };
     
-    std::string imgFilePath("Image05_with_tRange.ppm");
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -224,7 +269,7 @@ int Ch5MultiObjHitableWith_tRange(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0);
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
 
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -239,15 +284,16 @@ int Ch5MultiObjHitableWith_tRange(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
-    std::cout<< imgFilePath;
     return 0;
 }
 
 
 //Ch6: Antialiasing 
-int Ch6Antialiasing(){
+int Ch6Antialiasing(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
         //根据光线击中的最近点，进行渲染着色
@@ -261,7 +307,7 @@ int Ch6Antialiasing(){
         } 
     };
     
-    std::string imgFilePath("Image06_AntiAliasing.ppm");
+
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -275,7 +321,7 @@ int Ch6Antialiasing(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0);
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
     camera cam;//Ch6: 多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -293,15 +339,16 @@ int Ch6Antialiasing(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
 
     imageFile.close();
-    std::cout<< imgFilePath;
     return 0;
 }
 
 //Ch7: 模拟杂乱无章随机的漫反射
-int Ch7DiffuseMaterial(){
+int Ch7DiffuseMaterial(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
     // Ch7:取单位半径球内的任意一点vec3(x,y,z),用作表现反射的随机性
     auto random_in_unit_sphere = [&](){
         vec3 p;
@@ -326,7 +373,6 @@ int Ch7DiffuseMaterial(){
     };
     
 
-    std::string imgFilePath("Image07_DiffuseMaterial.ppm");
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -340,7 +386,7 @@ int Ch7DiffuseMaterial(){
 // multi-object
     std::shared_ptr<hitable> list[2];
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),0.5);
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0); 
+    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0);
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,2);
     camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -358,14 +404,15 @@ int Ch7DiffuseMaterial(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
-    std::cout<< imgFilePath;   
     return 0;
 }
 
 
-int Ch8MaterialMetal(){
+int Ch8MaterialMetal(std::string imgFilePath){
+    RtwProgress rtwProgress(imgFilePath, g_Height);
    //Ch8: modify getColor()
    using getColorFuncType = std::function<vec3(const ray&r,hitable *world,int depth)>;
     getColorFuncType getColor = [&](const ray&r,hitable *world,int depth) -> vec3{
@@ -373,7 +420,7 @@ int Ch8MaterialMetal(){
         //Ch6:根据光线击中的最近点，进行渲染着色
         if(world -> hit(r,0.001,g_MAX_FLOAT,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
             ray scattered;
-            vec3 attenuation;
+            vec3 attenuation;//Ch8 : 材料属性,反射率,吸光率
             if(depth < g_DepthThreshold && reco.mate_ptr->scatter(r,reco,attenuation,scattered)){
                 return attenuation *getColor(scattered,world,depth + 1);//递归,继续反射
             }
@@ -389,7 +436,6 @@ int Ch8MaterialMetal(){
     };
     
 
-    std::string imgFilePath("Image08_MetalMaterial.ppm");
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -402,10 +448,10 @@ int Ch8MaterialMetal(){
 
 // multi-object
     std::shared_ptr<hitable> list[4];
-    list[0] = std::make_shared<sphere>(vec3(0,0,-1),     0.5,std::make_shared<lambertian>(vec3(0.8,0.3,0.3)));
-    list[1] = std::make_shared<sphere>(vec3(0,-60.5,-1),60.0,std::make_shared<lambertian>(vec3(0.8,0.8,0.3))); 
-    list[2] = std::make_shared<sphere>(vec3(1,0,-1),    60.0,std::make_shared<metal>(vec3(0.8,0.6,0.2))); 
-    list[3] = std::make_shared<sphere>(vec3(-1,0,1),    60.0,std::make_shared<metal>(vec3(0.8,0.8,0.8))); 
+    list[0] = std::make_shared<sphere>(vec3(0,0,-1),       0.5,  std::make_shared<lambertian>(vec3(0.8,0.3,0.3)));
+    list[1] = std::make_shared<sphere>(vec3(0,-100.5,-1),100.0, std::make_shared<lambertian>(vec3(0.8, 0.8, 0.3)));
+    list[2] = std::make_shared<sphere>(vec3(1,0,-1),       0.4,  std::make_shared<metal>(vec3(0.8, 0.6, 0.2)));
+    list[3] = std::make_shared<sphere>(vec3(-1,0,-1),      0.5,  std::make_shared<metal>(vec3(0.8,0.8,0.8))); 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,4);
     camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -423,21 +469,8 @@ int Ch8MaterialMetal(){
             int ib = int(255.99 * color.b());
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
+        rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
-    std::cout<< imgFilePath;   
-    return 0;
-}
-int main(int argc,char* argv[]){
-    std::cout << "OutputImage: \n" ;
-    //Ch1OutputImage();
-    //Ch2OutputImage();
-    //Ch3SimpleCamImage();
-    //Ch4AddSphere();
-    //Ch5NormalsAndMultipleObj();
-    //Ch5MultiObjHitableWith_tRange();
-    //Ch6Antialiasing();
-    //Ch7DiffuseMaterial();
-    Ch8MaterialMetal();
     return 0;
 }
