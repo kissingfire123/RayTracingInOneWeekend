@@ -4,7 +4,13 @@ PROJECT(RayTracingInOneWeekend)
 
 
 FILE (GLOB ALL_SOURCES "./RayTracingInOneWeekend.cpp")
+source_group(Src FILES  ${ALL_SOURCES})
+
 FILE (GLOB ALL_INCLUDES "./include/*.h")
+source_group(rtw_include FILES  ${ALL_INCLUDES})
+
+FILE (GLOB ALL_DEPENDS  "./3rdParty/*.h")
+source_group(3rdParty  FILES  ${ALL_DEPENDS})
 
 if (MSVC)
 	# Set the startup project .
@@ -13,12 +19,13 @@ if (MSVC)
 	endif ()
 endif (MSVC)
 
-set(CMAKE_BUILD_TYPE "Release") # default run in release,more faster
+#set(CMAKE_BUILD_TYPE "Release") # default run in release,more faster
 
 add_executable(${CMAKE_PROJECT_NAME} 
     ${ALL_SOURCES}
-    ${ALL_INCLUDES})
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "./include")
+    ${ALL_INCLUDES}
+	${ALL_DEPENDS})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "./include" "./3rdParty")
 
 
 

@@ -3,8 +3,13 @@
 #include <functional>
 #include <io.h>
 #include <chrono>
+#include <vector>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 #include "progress.h"
+
+
 #include "vec3.h"
 #include "ray.h"
 #include "sphere.h"
@@ -24,8 +29,8 @@ int Ch7DiffuseMaterial(std::string imgFilePath);
 int Ch8MaterialMetal(std::string imgFilePath);
 
 
-const static int g_Width = 800;
-const static int g_Height = 400;
+const static int g_Width  = 1600;
+const static int g_Height = 800;
 const static int g_MAX_FLOAT = 1000;
 const static int g_RayNums = 100;
 const static int g_DepthThreshold = 50;
@@ -39,22 +44,24 @@ int main(int argc, char* argv[]) {
 #endif
     //以下每个Chx...函数都可以单独运行,互不影响,可以屏蔽其中任意几个单独运行其他的 
 
-    Ch1OutputImage("Image01.ppm");
-    Ch2OutputImage("Image02.ppm");
-    Ch3SimpleCamImage("Image03.ppm");
-    Ch4AddSphere("Image04_add_sphere.ppm");
-    Ch5NormalsAndMultipleObj("Image05_normals.ppm");
-    Ch5MultiObjHitableWith_tRange("Image05_with_tRange.ppm");
-    Ch6Antialiasing("Image06_AntiAliasing.ppm");
-    Ch7DiffuseMaterial("Image07_DiffuseMaterial.ppm");
+    //Ch1OutputImage("Image01.ppm");
+    //Ch2OutputImage("Image02.ppm");
+    //Ch3SimpleCamImage("Image03.ppm");
+    //Ch4AddSphere("Image04_add_sphere.ppm");
+    //Ch5NormalsAndMultipleObj("Image05_normals.ppm");
+    //Ch5MultiObjHitableWith_tRange("Image05_with_tRange.ppm");
+    //Ch6Antialiasing("Image06_AntiAliasing.ppm");
+    //Ch7DiffuseMaterial("Image07_DiffuseMaterial.ppm");
     Ch8MaterialMetal("Image08_MetalMaterial.ppm");
 
     return 0;
 }
 
+//Ch1: 对每个pixel逐次赋值Rgb,生成一张图片
 int Ch1OutputImage(std::string imgFilePath){
     RtwProgress rtwProgress(imgFilePath,g_Height);
     std::ofstream imageFile(imgFilePath);
+    std::vector<unsigned char> imgData;
     
     imageFile << "P3\n" << g_Width << " "  << g_Height << "\n255\n";
     for(int j = g_Height -1 ; j >= 0 ; --j){
@@ -62,18 +69,19 @@ int Ch1OutputImage(std::string imgFilePath){
             float r = float(i) / float(g_Width);
             float g = float(j) / float(g_Height);
             float b = 0.3;
-            int ir = int(255.99 * r);
-            int ig = int(255.99 * g);
-            int ib = int(255.99 * b);
-            imageFile << ir << " " << ig << " " << ib << "\n"; 
+            int ir = int(255.99 * r);imgData.push_back(ir);
+            int ig = int(255.99 * g);imgData.push_back(ig);
+            int ib = int(255.99 * b);imgData.push_back(ib);
+            imageFile << ir << " " << ig << " " << ib << "\n";
         }
         rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
+    stbi_write_bmp("1.bmp",g_Width,g_Height,3,imgData.data());
     return 0;
 }
 
-//the vec3 class
+// Ch2: 在Ch1的基础上,加入vec3 class
 int Ch2OutputImage(std::string imgFilePath){
     RtwProgress rtwProgress(imgFilePath, g_Height);
     std::ofstream imageFile(imgFilePath);
@@ -94,6 +102,7 @@ int Ch2OutputImage(std::string imgFilePath){
     return 0;
 }
 
+// Ch3： 根据向量原理，引入光线的概念，虚拟一台照相机观察光打在一个有限平面
 //rays,a simple camera,and background
 // P = Origin + t * Direction
 // coordinate: top:y+  , right: x+  , outPcScreen: z+
@@ -435,7 +444,7 @@ int Ch8MaterialMetal(std::string imgFilePath){
         } 
     };
     
-
+    std::vector<unsigned char> imgData;
     if(access(imgFilePath.c_str(),0) == 0){
         std::remove(imgFilePath.c_str());
     }
@@ -447,12 +456,17 @@ int Ch8MaterialMetal(std::string imgFilePath){
     vec3 originP(0.0,0.0,0.0);
 
 // multi-object
-    std::shared_ptr<hitable> list[4];
+    int nSphereNum = 5;//球的个数
+    using hitableRef = std::shared_ptr<hitable>;
+    std::vector<hitableRef> list;
+    list.resize(nSphereNum);
     list[0] = std::make_shared<sphere>(vec3(0,0,-1),       0.5,  std::make_shared<lambertian>(vec3(0.8,0.3,0.3)));
-    list[1] = std::make_shared<sphere>(vec3(0,-100.5,-1),100.0, std::make_shared<lambertian>(vec3(0.8, 0.8, 0.3)));
+    list[1] = std::make_shared<sphere>(vec3(0,-100.5,-1),100.0,  std::make_shared<lambertian>(vec3(0.8, 0.8, 0.3)));
     list[2] = std::make_shared<sphere>(vec3(1,0,-1),       0.4,  std::make_shared<metal>(vec3(0.8, 0.6, 0.2)));
-    list[3] = std::make_shared<sphere>(vec3(-1,0,-1),      0.5,  std::make_shared<metal>(vec3(0.8,0.8,0.8))); 
-    std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list,4);
+    list[3] = std::make_shared<sphere>(vec3(-1, 0, -1),    0.5,  std::make_shared<metal>(vec3(0.8, 0.8, 0.8)));
+    list[4] = std::make_shared<sphere>(vec3(-0.5,-0.4,-0.5),    0.1,  std::make_shared<lambertian>(vec3(0.2,1.0,1.0)));
+
+    std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list.data(), nSphereNum);
     camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = g_Width -1; i >= 0; --i){
@@ -464,13 +478,14 @@ int Ch8MaterialMetal(std::string imgFilePath){
                 color += getColor(r,world.get(),0);
             }
             color /= float(g_RayNums);
-            int ir = int(255.99 * color.r());
-            int ig = int(255.99 * color.g());
-            int ib = int(255.99 * color.b());
+            int ir = int(255.99 * color.r()); imgData.push_back(ir);
+            int ig = int(255.99 * color.g()); imgData.push_back(ig);
+            int ib = int(255.99 * color.b()); imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
         rtwProgress.Refresh(g_Height - j);
     }
     imageFile.close();
+    stbi_write_bmp("8.bmp", g_Width, g_Height, 3, imgData.data());
     return 0;
 }
