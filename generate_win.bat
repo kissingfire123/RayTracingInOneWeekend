@@ -5,6 +5,6 @@ mkdir build
 cd build 
 echo Then start cmake configure...
 echo Tip : all libs/targets was built by architecture-x86 ~_~ 
-cmake  -Thost=x86 -A Win32  ..
+cmake  -Thost=x86 -A Win32 -DCMAKE_CXX_FLAGS="-std=c++11" ..
 cd ..
 pause

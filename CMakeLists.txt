@@ -17,10 +17,13 @@ if (MSVC)
 	if (NOT ${CMAKE_VERSION} VERSION_LESS "3.12.0")
 		 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
 	endif ()
+	add_definitions(-DRTW_OS_WIN=1)
+else()
+	add_definitions(-DRTW_OS_MAC=1)
 endif (MSVC)
 
 #set(CMAKE_BUILD_TYPE "Release") # default run in release,more faster
-set(CMAKE_CXX_FLAGS "-std=c++11")
+
 add_executable(${CMAKE_PROJECT_NAME} 
     ${ALL_SOURCES}
     ${ALL_INCLUDES}

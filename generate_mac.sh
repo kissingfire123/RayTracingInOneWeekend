@@ -8,8 +8,6 @@ fi
 mkdir ${BUILD_DIR}
 pushd ${BUILD_DIR} 
 
-cmake -G Xcode \
- -DCMAKE_BUILD_TYPE=Release \
- ..
+cmake -G Xcode -DCMAKE_CXX_FLAGS="-std=c++11"   ..
 
 popd ${BUILD_DIR} 
