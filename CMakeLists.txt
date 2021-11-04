@@ -20,7 +20,7 @@ if (MSVC)
 endif (MSVC)
 
 #set(CMAKE_BUILD_TYPE "Release") # default run in release,more faster
-
+set(CMAKE_CXX_FLAGS "-std=c++11")
 add_executable(${CMAKE_PROJECT_NAME} 
     ${ALL_SOURCES}
     ${ALL_INCLUDES}
