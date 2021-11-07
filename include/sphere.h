@@ -23,25 +23,30 @@ bool sphere::hit(const ray& r, float tmin,float tmax,hit_record& reco) const{
     // 计算delta
     vec3 oc = r.origin() - center_;
     float a = dot(r.direction() , r.direction());
-    float b = 2.0 * dot(oc,r.direction());
+    float half_b = dot(oc,r.direction());//简化运算,统一除以2
     float c = dot(oc,oc) - radius_ * radius_;
-    float discriminant = b * b - 4 * a * c;
+    float discriminant = half_b * half_b - a * c;
     auto has_resolve_t = [&](float t)->bool{
         if(t < tmax && t > tmin){
             reco.t_ = t;
             reco.p_ = r.at_Parameter(reco.t_);
-            reco.normal_ = (reco.p_ - center_) / radius_;
+            vec3 outward_normal = (reco.p_ - center_) / radius_;
+            reco.setFaceNormal(r,outward_normal);
             reco.mate_ptr = material_.get();
             return true;
         }
         return false;
     };
-    if(discriminant > 0){
-        bool hitable = has_resolve_t((-b - sqrt(discriminant))/(2.0 * a));
-        if(hitable) return true;
-        hitable =  has_resolve_t((-b + sqrt(discriminant))/(2.0 * a));
-        if(hitable) return true;
+    if (discriminant < 0) {
+        return false;//方程无解, 光线与球没有交点
     }
+    auto sqrtd = sqrt(discriminant);
+    
+    bool hitable = has_resolve_t((-half_b - sqrtd)/ a);
+    if(hitable) return true;
+    hitable =  has_resolve_t((-half_b + sqrtd)/ a);
+    if(hitable) return true;
+    
     return false;
 }
 

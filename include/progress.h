@@ -23,7 +23,7 @@ public:
     ~RtwProgress(){
         end_  = std::chrono::high_resolution_clock::now();
         auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_).count();
-        std::cout << "\nIt's done! Spend time : " << cost / 1000.0 << " seconds\n";
+        std::cout << "It's done! Spend time : " << cost / 1000.0 << " seconds\n\n";
     }
 
 

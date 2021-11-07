@@ -26,7 +26,7 @@ class ray {
         {}
 
         point3 origin() const  { return orig; }
-        vec3 direction() const { return dir; }
+        const vec3 direction() const { return dir; }
         double time() const    { return tm; }
 
         point3 at_Parameter(double t) const {
