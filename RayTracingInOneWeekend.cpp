@@ -36,7 +36,7 @@ int Ch9_Dielectrics(std::string imgFilePath);
 
 const static int g_Width  = 800;//长宽比 2:1,和拟定的像素坐标比例一致
 const static int g_Height = 400;
-const static double g_MAX_TmFloat = 1000;//std::numeric_limits<double>::infinity();
+const static double g_MAX_TmFloat = 10000;//std::numeric_limits<double>::infinity();
 const static int g_RayNums = 100;
 const static int g_DepthThreshold = 50;
 
@@ -51,16 +51,16 @@ int main(int argc, char* argv[]) {
 #endif
     //以下每个Chx...函数都可以单独运行,互不影响,可以屏蔽其中任意几个单独运行其他的 
 
-    //Ch1_OutputImage("Image01.ppm");
-    //Ch2_OutputImage("Image02.ppm");
-    //Ch3_SimpleCamImage("Image03.ppm");
-    //Ch4_AddSphere("Image04_add_sphere.ppm");
-    //Ch5_NormalsAndMultipleObj("Image05_normals.ppm");
-    //Ch5_MultiObjHitableWith_tRange("Image05_with_tRange.ppm");
-    //Ch6_Antialiasing("Image06_AntiAliasing.ppm");
-    Ch7_DiffuseMaterial("Image07_DiffuseMaterial.ppm");
-    //Ch8_MaterialMetal("Image08_MetalMaterial.ppm");
-    //Ch9_Dielectrics("Image09_DilectricsMaterial.ppm");
+    Ch1_OutputImage("./Image01.ppm");
+    Ch2_OutputImage("./Image02.ppm");
+    Ch3_SimpleCamImage("./Image03.ppm");
+    Ch4_AddSphere("./Image04_add_sphere.ppm");
+    Ch5_NormalsAndMultipleObj("./Image05_normals.ppm");
+    Ch5_MultiObjHitableWith_tRange("./Image05_with_tRange.ppm");
+    Ch6_Antialiasing("./Image06_AntiAliasing.ppm");
+    Ch7_DiffuseMaterial("./Image07_DiffuseMaterial.ppm");
+    Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
+    Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");
     return 0;
 }
 
@@ -569,7 +569,7 @@ int Ch9_Dielectrics(std::string imgFilePath) {
     list.push_back(std::make_shared<sphere>(vec3(0.5,-0.4,-0.5),  0.1, std::make_shared<lambertian>(vec3(0.2, 1.0, 1.0))));
     list.push_back(std::make_shared<sphere>(vec3(1 , 0, -1),      0.5, std::make_shared<metal>(vec3(0.8, 0.6, 0.2))));
     list.push_back(std::make_shared<sphere>(vec3(-1, 0, -1),      0.5, std::make_shared<dielectric>(1.5)));
-    list.push_back(std::make_shared<sphere>(vec3(1 , 0, -1),    -0.45, std::make_shared<dielectric>(1.5)));
+    list.push_back(std::make_shared<sphere>(vec3(-1 , 0, -1),   -0.45, std::make_shared<dielectric>(1.5)));
 
     std::shared_ptr<hitable> world = std::make_shared<hitable_list>(list.data(), list.size());
     camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠

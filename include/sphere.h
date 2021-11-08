@@ -44,8 +44,8 @@ bool sphere::hit(const ray& r, float tmin,float tmax,hit_record& reco) const{
     
     bool hitable = has_resolve_t((-half_b - sqrtd)/ a);
     if(hitable) return true;
-    hitable =  has_resolve_t((-half_b + sqrtd)/ a);
-    if(hitable) return true;
+    //hitable =  has_resolve_t((-half_b + sqrtd)/ a); //可能造成无限递归
+    //if(hitable) return true;
     
     return false;
 }
