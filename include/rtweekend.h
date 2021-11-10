@@ -24,14 +24,19 @@ using std::sqrt;
 // Constants
 
 const double infinity = std::numeric_limits<double>::infinity();
-const double pi = 3.1415926535897932385;
+const double RTW_PI = 3.1415926535897932385;
 
+const static int g_Width = 800;//长宽比 2:1,和拟定的像素坐标比例一致
+const static int g_Height = 400;
+const static double g_MAX_TmFloat = 10000;//std::numeric_limits<double>::infinity();
+const static int g_RayNums = 100;
+const static int g_DepthThreshold = 50;
 
 
 // Utility Functions
 
 inline double degrees_to_radians(double degrees) {
-    return degrees * pi / 180.0;
+    return degrees * RTW_PI / 180.0;
 }
 
 inline double clamp(double x, double min, double max) {
