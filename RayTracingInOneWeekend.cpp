@@ -21,6 +21,8 @@
 #include "camera.h"
 #include "material.h"
 
+
+
 //Declaration
 int Ch1_OutputImage(std::string imgFilePath);
 int Ch2_OutputImage(std::string imgFilePath);
@@ -617,11 +619,17 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
     float radius = cos(RTW_PI/4);
     using hitableRef = shared_ptr<hitable>;
     std::vector<hitableRef> list;
-    list.push_back(make_shared<sphere>(vec3(-radius, 0, -1), radius, make_shared<lambertian>(vec3(0, 0, 1))));
-    list.push_back(make_shared<sphere>(vec3(radius , 0, -1), radius, make_shared<lambertian>(vec3(1, 0, 0))));
+    list.push_back(make_shared<sphere>(vec3(0, 0, -1),        0.5, make_shared<lambertian>(vec3(0.1, 0.2, 0.5))));
+    list.push_back(make_shared<sphere>(vec3(0, -100.5, -1),   100, make_shared<lambertian>(vec3(0.8, 0.8, 0.0))));
+    list.push_back(make_shared<sphere>(vec3(0.5, -0.4, -0.5), 0.1, make_shared<lambertian>(vec3(0.2, 1.0, 1.0))));
+    list.push_back(make_shared<sphere>(vec3(1, 0, -1),        0.5, make_shared<metal>(vec3(0.8, 0.6, 0.2))));
+    list.push_back(make_shared<sphere>(vec3(-1, 0, -1),       0.5, make_shared<dielectric>(1.5)));
+    list.push_back(make_shared<sphere>(vec3(-1, 0, -1),     -0.45, make_shared<dielectric>(1.5)));
 
     shared_ptr<hitable> world = make_shared<hitable_list>(list.data(), list.size());
-    camera cam;//多条光线打向同一个pixel,模拟MSAA进行抗混叠
+    //Ch10: free to set aspect,and vertical-fov degree
+    float aspect = float(g_Width) / float(g_Height);
+    camera cam(53.0, aspect,vec3(-2,2,1),vec3(0,0,-1),vec3(0,1,0));//多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for (int j = g_Height - 1; j >= 0; --j) {
         for (int i = 0; i < g_Width; ++i) {
             vec3 color(0, 0, 0);
