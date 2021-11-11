@@ -17,8 +17,8 @@ struct hit_record{
     }
 };
 
-// 抽象类：适应多物体，多光线情况
-// 给定t的区间 tmin , tmax
+// 抽象类:适应多物体,多光线情况
+// 给定t的区间 tmin,tmax
 class hitable{
     public:
     virtual bool hit(const ray&r, float t_min, float t_max,hit_record& rec) const = 0;

@@ -26,7 +26,8 @@ using std::sqrt;
 const double infinity = std::numeric_limits<double>::infinity();
 const double RTW_PI = 3.1415926535897932385;
 
-const static int g_Width = 800;//长宽比 2:1,和拟定的像素坐标比例一致
+
+const static int g_Width = 800;//in Ch1~Ch9,can't set the screen aspect,should keep Width:Height=2:1
 const static int g_Height = 400;
 const static double g_MAX_TmFloat = 10000;//std::numeric_limits<double>::infinity();
 const static int g_RayNums = 100;

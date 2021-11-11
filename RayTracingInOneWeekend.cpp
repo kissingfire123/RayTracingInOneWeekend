@@ -108,7 +108,7 @@ int Ch2_OutputImage(std::string imgFilePath){
     return 0;
 }
 
-// Ch3： 根据向量原理，引入光线的概念，虚拟一台照相机观察光打在一个有限平面
+// Ch3: 根据向量原理,引入光线的概念,虚拟一台照相机观察光打在一个有限平面
 //rays,a simple camera,and background
 // P = Origin + t * Direction
 // coordinate: top:y+  , right: x+  , outPcScreen: z+
@@ -268,7 +268,7 @@ int Ch5_MultiObjHitableWith_tRange(std::string imgFilePath){
     RtwProgress rtwProgress(imgFilePath, g_Height);
     auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
-        //根据光线击中的最近点，进行渲染着色
+        //根据光线击中的最近点,进行渲染着色
         if(world -> hit(r,0.0,g_MAX_TmFloat,reco)){
             return 0.5*vec3(reco.normal_.x() + 1,reco.normal_.y() + 1, reco.normal_.z() + 1);
         }
@@ -322,7 +322,7 @@ int Ch6_Antialiasing(std::string imgFilePath){
     RtwProgress rtwProgress(imgFilePath, g_Height);
     auto getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
-        //根据光线击中的最近点，进行渲染着色
+        //根据光线击中的最近点,进行渲染着色
         if(world -> hit(r,0.0,g_MAX_TmFloat,reco)){
             return 0.5*vec3(reco.normal_.x() + 1,reco.normal_.y() + 1, reco.normal_.z() + 1);
         }
@@ -349,7 +349,7 @@ int Ch6_Antialiasing(std::string imgFilePath){
     list[0] = make_shared<sphere>(vec3(0,0,-1),0.5);
     list[1] = make_shared<sphere>(vec3(0,-60.5,-1),60.0);
     shared_ptr<hitable> world = make_shared<hitable_list>(list,2);
-    camera cam;//Ch6: 多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//Ch6: 多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = 0 ; i < g_Width; ++i){
             vec3 color(0,0,0);
@@ -388,10 +388,10 @@ int Ch7_DiffuseMaterial(std::string imgFilePath){
     using getColorFuncType = std::function<vec3(const ray&r,hitable *world)>;
     getColorFuncType getColor = [&](const ray&r,hitable *world) -> vec3{
         hit_record reco;
-        //Ch6:根据光线击中的最近点，进行渲染着色
-        if(world -> hit(r,0.001,g_MAX_TmFloat,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
-            vec3 target = reco.p_ + reco.normal_ + random_in_unit_sphere();//Ch7:p_+normal_得到hit-point的球心，再随机选个方向作为反射关系
-            return 0.5* getColor(ray(reco.p_,target-reco.p_),world);//Ch7:递归调用，即多次反射，直到hit-miss
+        //Ch6:根据光线击中的最近点,进行渲染着色
+        if(world -> hit(r,0.001,g_MAX_TmFloat,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值,避免浮点精度带来的毛刺
+            vec3 target = reco.p_ + reco.normal_ + random_in_unit_sphere();//Ch7:p_+normal_得到hit-point的球心,再随机选个方向作为反射关系
+            return 0.5* getColor(ray(reco.p_,target-reco.p_),world);//Ch7:递归调用,即多次反射,直到hit-miss
         }
         else{
             vec3 unit_direction = unit_vector(r.direction());
@@ -412,7 +412,7 @@ int Ch7_DiffuseMaterial(std::string imgFilePath){
     list[0] = make_shared<sphere>(vec3(0,0,-1),0.5);
     list[1] = make_shared<sphere>(vec3(0,-60.5,-1),60.0);
     shared_ptr<hitable> world = make_shared<hitable_list>(list,2);
-    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = 0 ; i < g_Width; ++i){
             vec3 color(0,0,0);
@@ -443,8 +443,8 @@ int Ch8_MaterialMetal(std::string imgFilePath){
    using getColorFuncType = std::function<vec3(const ray&r,hitable *world,int depth)>;
     getColorFuncType getColor = [&](const ray&r,hitable *world,int depth) -> vec3{
         hit_record reco;
-        //Ch6:根据光线击中的最近点，进行渲染着色
-        if(world -> hit(r,0.001,g_MAX_TmFloat,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
+        //Ch6:根据光线击中的最近点,进行渲染着色
+        if(world -> hit(r,0.001,g_MAX_TmFloat,reco)){//Ch7: 0.001f,表示去除靠近0的浮点值,避免浮点精度带来的毛刺
             ray scattered;
             vec3 attenuation;//Ch8 : 材料属性,反射率,吸光率
             if(depth < g_DepthThreshold && reco.mate_ptr->scatter(r,reco,attenuation,scattered)){
@@ -480,7 +480,7 @@ int Ch8_MaterialMetal(std::string imgFilePath){
     list[4] = make_shared<sphere>(vec3(-0.5,-0.4,-0.5),0.1, make_shared<lambertian>(vec3(0.2,1.0,1.0)));
 
     shared_ptr<hitable> world = make_shared<hitable_list>(list.data(), nSphereNum);
-    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for(int j = g_Height -1 ; j >= 0 ; --j){
         for(int i = 0 ; i < g_Width; ++i){
             vec3 color(0,0,0);
@@ -508,7 +508,7 @@ int Ch8_MaterialMetal(std::string imgFilePath){
 
 
 /* Ch9 透明介质(dielectrics),涉及光的折射refract
- * 复习初中物理知识: 空气折射率1.0 ,玻璃1.3~1.7，钻石2.4
+ * 复习初中物理知识: 空气折射率1.0 ,玻璃1.3~1.7,钻石2.4
  * 折射定律(也叫斯涅尔定律): 入射光与折射光线位于分界线两侧,分界线垂直于法线
  *                         2种材质的折射率与角度n1*sin(x1) = n2*sin(x2)
                            相对折射率:n21 = sin(x1)/sin(x2) (1介质到2介质)
@@ -522,8 +522,8 @@ int Ch9_Dielectrics(std::string imgFilePath) {
         if (depth > g_DepthThreshold) {
             return color(0, 0, 0);
         }
-        //Ch6:根据光线击中的最近点，进行渲染着色
-        if (world->hit(r, 0.001, g_MAX_TmFloat, reco)) {//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
+        //Ch6:根据光线击中的最近点,进行渲染着色
+        if (world->hit(r, 0.001, g_MAX_TmFloat, reco)) {//Ch7: 0.001f,表示去除靠近0的浮点值,避免浮点精度带来的毛刺
             ray scattered;
             vec3 attenuation;//Ch8 : 材料属性,反射率,吸光率
             if (reco.mate_ptr->scatter(r, reco, attenuation, scattered)) {
@@ -555,7 +555,7 @@ int Ch9_Dielectrics(std::string imgFilePath) {
     list.push_back(make_shared<sphere>(vec3(-1 , 0, -1),   -0.45, make_shared<dielectric>(1.5)));
 
     shared_ptr<hitable> world = make_shared<hitable_list>(list.data(), list.size());
-    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for (int j = g_Height - 1; j >= 0; --j) {
         for (int i = 0; i < g_Width; ++i) {
             vec3 color(0, 0, 0);
@@ -590,8 +590,8 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
         if (depth > g_DepthThreshold) {
             return color(0, 0, 0);
         }
-        //Ch6:根据光线击中的最近点，进行渲染着色
-        if (world->hit(r, 0.001, g_MAX_TmFloat, reco)) {//Ch7: 0.001f,表示去除靠近0的浮点值，避免浮点精度带来的毛刺
+        //Ch6:根据光线击中的最近点,进行渲染着色
+        if (world->hit(r, 0.001, g_MAX_TmFloat, reco)) {//Ch7: 0.001f,表示去除靠近0的浮点值,避免浮点精度带来的毛刺
             ray scattered;
             vec3 attenuation;//Ch8 : 材料属性,反射率,吸光率
             if (reco.mate_ptr->scatter(r, reco, attenuation, scattered)) {
@@ -621,7 +621,7 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
     list.push_back(make_shared<sphere>(vec3(radius , 0, -1), radius, make_shared<lambertian>(vec3(1, 0, 0))));
 
     shared_ptr<hitable> world = make_shared<hitable_list>(list.data(), list.size());
-    camera cam;//多条光线打向同一个pixel，模拟MSAA进行抗混叠
+    camera cam;//多条光线打向同一个pixel,模拟MSAA进行抗混叠
     for (int j = g_Height - 1; j >= 0; --j) {
         for (int i = 0; i < g_Width; ++i) {
             vec3 color(0, 0, 0);

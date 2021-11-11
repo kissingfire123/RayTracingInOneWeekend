@@ -46,7 +46,7 @@ class dielectric : public material {
 public:
     dielectric(float ri) : ref_idx_(ri) {}
     virtual bool  scatter(const ray& r_in, const hit_record& reco, vec3& attenuation, ray & scattered) const override{
-        attenuation = color(1.0, 1.0, 1.0);//透明物质,例如玻璃，不吸收光线
+        attenuation = color(1.0, 1.0, 1.0);//透明物质,例如玻璃,不吸收光线
         float ni_over_nt = reco.frontFace ? (1.0 / ref_idx_) : ref_idx_;
         vec3 unit_direction = unit_vector(r_in.direction());
         double cos_theta = fmin(dot(-unit_direction, reco.normal_), 1.0);
