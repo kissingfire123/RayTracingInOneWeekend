@@ -28,8 +28,8 @@ const double RTW_PI = 3.1415926535897932385;
 
 //in Ch1~Ch9: should keep g_Width:g_Height=2:1
 //since Ch10: no need keep 2:1, because aspect is free to set
-const static int g_Width  = 1920;
-const static int g_Height = 1080;
+const static int g_Width  = 800;
+const static int g_Height = 400;
 
 const static double g_MAX_TmFloat = 10000; 
 const static int g_RayNums = 100;

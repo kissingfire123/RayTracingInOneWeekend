@@ -35,6 +35,7 @@ int Ch7_DiffuseMaterial(std::string imgFilePath);
 int Ch8_MaterialMetal(std::string imgFilePath);
 int Ch9_Dielectrics(std::string imgFilePath);
 int Ch10_PositionableCamera(std::string imgFilePath);
+int Ch11_DefocusBlur(std::string imgFilePath);
 
 
 int main(int argc, char* argv[]) { 
@@ -57,7 +58,9 @@ int main(int argc, char* argv[]) {
     //Ch7_DiffuseMaterial("./Image07_DiffuseMaterial.ppm");
     //Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
     //Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");
-    Ch10_PositionableCamera("./Image10_PositionableCamera.ppm");
+    //Ch10_PositionableCamera("./Image10_PositionableCamera.ppm");
+    Ch11_DefocusBlur("./Image11_DefocusBlur.ppm");
+
     return 0;
 }
 
@@ -582,7 +585,7 @@ int Ch9_Dielectrics(std::string imgFilePath) {
     return 0;
 }
 
-//  Ch10: 之前的camera的位置现在需要移动,切换观察视角
+//  Ch10: 之前的camera的位置现在需要移动,切换观察视角,并且启用aspect,长宽比不需要继续保持2:1
 int Ch10_PositionableCamera(std::string imgFilePath) {
     RtwProgress rtwProgress(imgFilePath, g_Height);
     //Ch8: modify getColor()
@@ -616,7 +619,6 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
     imageFile << "P3\n" << g_Width << " " << g_Height << "\n255\n";
 
     // multi-object
-    float radius = cos(RTW_PI/4);
     using hitableRef = shared_ptr<hitable>;
     std::vector<hitableRef> list;
     list.push_back(make_shared<sphere>(vec3(0, 0, -1),        0.5, make_shared<lambertian>(vec3(0.1, 0.2, 0.5))));
@@ -630,6 +632,81 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
     //Ch10: free to set aspect,and vertical-fov degree
     float aspect = float(g_Width) / float(g_Height);
     camera cam(53.0, aspect,vec3(-2,2,1),vec3(0,0,-1),vec3(0,1,0));//多条光线打向同一个pixel,模拟MSAA进行抗混叠
+    for (int j = g_Height - 1; j >= 0; --j) {
+        for (int i = 0; i < g_Width; ++i) {
+            vec3 color(0, 0, 0);
+            for (int s = 0; s < g_RayNums; ++s) {
+                float u = float(i + random_double()) / float(g_Width);
+                float v = float(j + random_double()) / float(g_Height);
+                ray r = cam.get_ray(u, v);
+                color += getColor(r, world.get(), 0);
+            }
+            color /= float(g_RayNums);
+            int ir = int(255.99 * color.r()); imgData.push_back(ir);
+            int ig = int(255.99 * color.g()); imgData.push_back(ig);
+            int ib = int(255.99 * color.b()); imgData.push_back(ib);
+            imageFile << ir << " " << ig << " " << ib << "\n";
+        }
+        rtwProgress.Refresh(g_Height - j);
+    }
+
+    imageFile.close();
+    imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
+    stbi_write_bmp(imgFilePath.c_str(), g_Width, g_Height, 3, imgData.data());
+    return 0;
+}
+
+
+// Ch11: 在Ch10的基础上添加散焦效果
+int Ch11_DefocusBlur(std::string imgFilePath) {
+    RtwProgress rtwProgress(imgFilePath, g_Height);
+    //Ch8: modify getColor()
+    using getColorFuncType = std::function<vec3(const ray&r, hitable *world, int depth)>;
+    getColorFuncType getColor = [&](const ray&r, hitable *world, int depth) -> vec3 {
+        hit_record reco;
+        if (depth > g_DepthThreshold) {
+            return color(0, 0, 0);
+        }
+        //Ch6:根据光线击中的最近点,进行渲染着色
+        if (world->hit(r, 0.001, g_MAX_TmFloat, reco)) {//Ch7: 0.001f,表示去除靠近0的浮点值,避免浮点精度带来的毛刺
+            ray scattered;
+            vec3 attenuation;//Ch8 : 材料属性,反射率,吸光率
+            if (reco.mate_ptr->scatter(r, reco, attenuation, scattered)) {
+                return attenuation * getColor(scattered, world, depth + 1);//递归,继续反射
+            }
+            return color(0, 0, 0);
+        }
+
+        vec3 unit_direction = unit_vector(r.direction());
+        float t = 0.5 * (unit_direction.y() + 1.0);
+        return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+    };
+
+    std::vector<unsigned char> imgData;
+    if (access(imgFilePath.c_str(), 0) == 0) {
+        std::remove(imgFilePath.c_str());
+    }
+    std::ofstream imageFile(imgFilePath);
+    imageFile << "P3\n" << g_Width << " " << g_Height << "\n255\n";
+
+    // multi-object
+    using hitableRef = shared_ptr<hitable>;
+    std::vector<hitableRef> list;
+    list.push_back(make_shared<sphere>(vec3(0, 0, -1),        0.5, make_shared<lambertian>(vec3(0.1, 0.2, 0.5))));
+    list.push_back(make_shared<sphere>(vec3(0, -100.5, -1),   100, make_shared<lambertian>(vec3(0.8, 0.8, 0.0))));
+    list.push_back(make_shared<sphere>(vec3(0.5, -0.4, -0.5), 0.1, make_shared<lambertian>(vec3(0.2, 1.0, 1.0))));
+    list.push_back(make_shared<sphere>(vec3(1, 0, -1),        0.5, make_shared<metal>(vec3(0.8, 0.6, 0.2))));
+    list.push_back(make_shared<sphere>(vec3(-1, 0, -1),       0.5, make_shared<dielectric>(1.5)));
+    list.push_back(make_shared<sphere>(vec3(-1, 0, -1),     -0.45, make_shared<dielectric>(1.5)));
+
+    shared_ptr<hitable> world = make_shared<hitable_list>(list.data(), list.size());
+    //Ch10: free to set aspect,and vertical-fov degree
+    vec3 lookFrom(3, 3, 2);
+    vec3 lookAt(0, 0, -1);
+    float aperture = 2.0;
+    float aspect = float(g_Width) / float(g_Height);
+    //Ch11:加入焦距和光圈概念,模拟散焦模糊(景深)现象
+    camera cam(40, aspect, lookFrom, lookAt, vec3(0, 1, 0), aperture,(lookFrom-lookAt).length()); 
     for (int j = g_Height - 1; j >= 0; --j) {
         for (int i = 0; i < g_Width; ++i) {
             vec3 color(0, 0, 0);
