@@ -27,7 +27,7 @@ bool sphere::hit(const ray& r, float tmin,float tmax,hit_record& reco) const{
     float c = dot(oc,oc) - radius_ * radius_;
     float discriminant = half_b * half_b - a * c;
     auto has_resolve_t = [&](float t)->bool{
-        if(t < tmax && t > tmin){
+        if(t <= tmax && t >= tmin){
             reco.t_ = t;
             reco.p_ = r.at_Parameter(reco.t_);
             vec3 outward_normal = (reco.p_ - center_) / radius_;
@@ -42,10 +42,10 @@ bool sphere::hit(const ray& r, float tmin,float tmax,hit_record& reco) const{
     }
     auto sqrtd = sqrt(discriminant);
     
-    bool hitable = has_resolve_t((-half_b - sqrtd)/ a);
+    bool hitable = has_resolve_t((-half_b - sqrtd)/ a);//优先看近点
     if(hitable) return true;
-    //hitable =  has_resolve_t((-half_b + sqrtd)/ a); //可能造成无限递归
-    //if(hitable) return true;
+    hitable =  has_resolve_t((-half_b + sqrtd)/ a); 
+    if(hitable) return true;
     
     return false;
 }

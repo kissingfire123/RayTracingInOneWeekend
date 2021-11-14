@@ -26,10 +26,10 @@ private:
 
 class metal : public material{
 public:
-    metal(const vec3& a): albedo_(a){}
+    metal(const vec3& a, double f = 0.0): albedo_(a),fuzz_(fmin(f,1)){}
     virtual bool  scatter(const ray& r_in,const hit_record& reco,vec3& attenuation, ray & scattered) const override {
         vec3 reflected = metal::_reflect(unit_vector(r_in.direction()), reco.normal_);
-        scattered = ray(reco.p_ , reflected);
+        scattered = ray(reco.p_ ,reflected + fuzz_ *random_in_unit_sphere());
         attenuation = albedo_;
         return dot(scattered.direction(), reco.normal_) > 0;
     }
@@ -39,6 +39,7 @@ public:
 private:
 
     vec3 albedo_;
+    float fuzz_ = 0;
 };
 
 
@@ -56,12 +57,8 @@ public:
         float dt = dot(unit_direction, reco.normal_);
         float discriminant = 1.0 - ni_over_nt * ni_over_nt *(1 - dt * dt);
         float outProb = 0;
-        //if (discriminant > 0) {
-            outProb = _schlick(cos_theta, ni_over_nt) ;
-        //}
-        //else {
-           // outProb = 1.0;
-        //}
+        outProb = _schlick(cos_theta, ni_over_nt) ;
+
         vec3 outDirection;
         if ((!hasRefract) || outProb > random_double()) {
             outDirection = reflect(unit_direction,reco.normal_);
