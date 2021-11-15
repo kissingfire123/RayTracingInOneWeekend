@@ -55,11 +55,11 @@ int main(int argc, char* argv[]) {
     //Ch5_MultiObjHitableWith_tRange("./Image05_with_tRange.ppm");
     //Ch6_Antialiasing("./Image06_AntiAliasing.ppm");
     //Ch7_DiffuseMaterial("./Image07_DiffuseMaterial.ppm");
-   /* Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
-    Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");*/
+    Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
+    Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");
     //Ch10_PositionableCamera("./Image10_PositionableCamera.ppm");
     //Ch11_DefocusBlur("./Image11_DefocusBlur.ppm");
-    Ch12_FinalScene("./Image12_FinalScene.ppm");
+    //Ch12_FinalScene("./Image12_FinalScene.ppm");
     return 0;
 }
 

@@ -57,7 +57,7 @@ private:
     vec3 u_ = vec3(0.0, 0.0, 0.0); 
     vec3 v_ = vec3(0.0, 0.0, 0.0);  
     vec3 w_ = vec3(0.0, 0.0, 0.0); 
-    float lens_radius_;//模拟光圈尺寸,可以控制散焦的程度
+    float lens_radius_ = 0.0;//模拟光圈尺寸,可以控制散焦的程度
 };
 
 
