@@ -31,7 +31,7 @@ const double RTW_PI = 3.1415926535897932385;
 const static int g_Width  = 800;
 const static int g_Height = 400;
 
-const static double g_MAX_TmFloat =  1000;
+const static double g_MAX_TmFloat =  MAXFLOAT;
 const static int g_RayNums = 100;
 const static int g_DepthThreshold = 50;
 

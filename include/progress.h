@@ -31,14 +31,14 @@ private :
     std::chrono::high_resolution_clock::time_point begin_;
     std::chrono::high_resolution_clock::time_point end_;
     int imgTotalLine_ = 0;
-
+    std::mutex mtxProgress_;
     //this function 'print_progress' is copied from Github:https://gist.github.com/juliusikkala/946f505656ed3c35f6c2741f29f26080
     void print_progress(int p, int total, int width = 80)
     {
         std::string total_str = std::to_string(total);
         std::string p_str = std::to_string(p);
         int bar_width = width - total_str.size() * 2 - 4;
-
+        std::lock_guard<std::mutex> lockCout(mtxProgress_);
         std::cout << '\r';
         if (bar_width > 1)
         {

@@ -8,6 +8,7 @@
 #endif
 #include <chrono>
 #include <vector>
+#include <thread>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"//vscode插件(PPM/PGM Viewer)可打开*.ppm,但不如*.bmp方便,都输出
@@ -55,11 +56,11 @@ int main(int argc, char* argv[]) {
     //Ch5_MultiObjHitableWith_tRange("./Image05_with_tRange.ppm");
     //Ch6_Antialiasing("./Image06_AntiAliasing.ppm");
     //Ch7_DiffuseMaterial("./Image07_DiffuseMaterial.ppm");
-    Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
-    Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");
+    //Ch8_MaterialMetal("./Image08_MetalMaterial.ppm");
+    //Ch9_Dielectrics("./Image09_DilectricsMaterial.ppm");
     //Ch10_PositionableCamera("./Image10_PositionableCamera.ppm");
     //Ch11_DefocusBlur("./Image11_DefocusBlur.ppm");
-    //Ch12_FinalScene("./Image12_FinalScene.ppm");
+    Ch12_FinalScene("./Image12_FinalScene.ppm");
     return 0;
 }
 
@@ -792,11 +793,10 @@ int Ch12_FinalScene(std::string imgFilePath) {
     shared_ptr<hitable> world = getRandomWorldScene();
 
     std::vector<unsigned char> imgData;
+    imgData.resize(g_Width*g_Height*3);
     if (access(imgFilePath.c_str(), 0) == 0) {
         std::remove(imgFilePath.c_str());
     }
-    std::ofstream imageFile(imgFilePath);
-    imageFile << "P3\n" << g_Width << " " << g_Height << "\n255\n";
 
     //Ch10: free to set aspect,and vertical-fov degree
     vec3 lookFrom(13, 2, 3);
@@ -805,25 +805,39 @@ int Ch12_FinalScene(std::string imgFilePath) {
     float aspect = float(g_Width) / float(g_Height);
     //Ch11:加入焦距和光圈概念,模拟散焦模糊(景深)现象
     camera cam(20, aspect, lookFrom, lookAt, vec3(0, 1, 0), aperture,10.0);
-    for (int j = g_Height - 1; j >= 0; --j) {
-        for (int i = 0; i < g_Width; ++i) {
-            vec3 color(0, 0, 0);
-            for (int s = 0; s < g_RayNums; ++s) {
-                float u = float(i + random_double()) / float(g_Width);
-                float v = float(j + random_double()) / float(g_Height);
-                ray r = cam.get_ray(u, v);
-                color += getColor(r, world.get(), 0);
+    auto calcPartImg = [&](int height_start,int height_end){
+        for (int j = height_start; j < height_end; ++j) {
+            for (int i = 0; i < g_Width; ++i) {
+                int currPixelPos = j*g_Width*3 + 3*i;
+                vec3 color(0, 0, 0);
+                for (int s = 0; s < g_RayNums; ++s) {
+                    float u = float(i + random_double()) / float(g_Width);
+                    float v = float(g_Height - 1 - j + random_double()) / float(g_Height);
+                    ray r = cam.get_ray(u, v);
+                    color += getColor(r, world.get(), 0);
+                }
+                color /= float(g_RayNums);
+                int ir = int(255.99 * color.r()); imgData[currPixelPos]   = ir;
+                int ig = int(255.99 * color.g()); imgData[currPixelPos+1] = ig;
+                int ib = int(255.99 * color.b()); imgData[currPixelPos+2] = ib;
             }
-            color /= float(g_RayNums);
-            int ir = int(255.99 * color.r()); imgData.push_back(ir);
-            int ig = int(255.99 * color.g()); imgData.push_back(ig);
-            int ib = int(255.99 * color.b()); imgData.push_back(ib);
-            imageFile << ir << " " << ig << " " << ib << "\n";
+            rtwProgress.Refresh(j);
         }
-        rtwProgress.Refresh(g_Height - j);
+    };
+    int threadNum = std::thread::hardware_concurrency();
+    int averageLineNum = g_Height/threadNum;
+    std::vector<std::thread> threads;
+    threads.resize(threadNum);
+    //多线程加速,eg:800x400的运行时间,110s加速到27s
+    for(int threadIdx = 0; threadIdx < threadNum; ++threadIdx){
+        int startLine = threadIdx * averageLineNum;
+        int endLine =  (threadIdx == threadNum -1)? g_Height :(threadIdx+1) * averageLineNum ;
+        threads[threadIdx] = std::thread(calcPartImg,startLine,endLine);
+    }
+    for(int threadIdx = 0; threadIdx < threadNum; ++threadIdx){
+        threads[threadIdx].join();
     }
 
-    imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
     stbi_write_bmp(imgFilePath.c_str(), g_Width, g_Height, 3, imgData.data());
     return 0;
