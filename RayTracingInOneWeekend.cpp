@@ -804,7 +804,7 @@ int Ch12_FinalScene(std::string imgFilePath) {
     float aperture = 0.05;
     float aspect = float(g_Width) / float(g_Height);
     //Ch11:加入焦距和光圈概念,模拟散焦模糊(景深)现象
-    camera cam(20, aspect, lookFrom, lookAt, vec3(0, 1, 0), aperture,10.0);
+    camera cam(20, aspect, lookFrom, lookAt, vec3(0, 1, 0), aperture,(lookFrom-lookAt).length());
     auto calcPartImg = [&](int height_start,int height_end){
         for (int j = height_start; j < height_end; ++j) {
             for (int i = 0; i < g_Width; ++i) {

@@ -5,6 +5,7 @@
 #include <string>
 #include <chrono>
 #include <cassert>
+#include <mutex>
 
 // 因为生成图片比较耗时,实现一个简单的进度记录类
 class RtwProgress{
