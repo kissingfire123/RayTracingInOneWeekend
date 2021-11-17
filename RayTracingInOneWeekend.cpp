@@ -81,7 +81,7 @@ int Ch1_OutputImage(std::string imgFilePath){
             int ib = int(255.99 * b);  imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n";
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"),4,".bmp");
@@ -104,7 +104,7 @@ int Ch2_OutputImage(std::string imgFilePath){
             int ib = int(255.99 * color.b());   imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
 
     imageFile.close();
@@ -145,7 +145,7 @@ int Ch3_SimpleCamImage(std::string imgFilePath){
             int ib = int(255.99 * color.b());  imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -201,7 +201,7 @@ int Ch4_AddSphere(std::string imgFilePath){
             int ib = int(255.99 * color.b());  imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -260,7 +260,7 @@ int Ch5_NormalsAndMultipleObj(std::string imgFilePath){
             int ib = int(255.99 * color.b());   imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -313,7 +313,7 @@ int Ch5_MultiObjHitableWith_tRange(std::string imgFilePath){
             int ib = int(255.99 * color.b());   imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -370,7 +370,7 @@ int Ch6_Antialiasing(std::string imgFilePath){
             int ib = int(255.99 * color.b());  imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
 
     imageFile.close();
@@ -433,7 +433,7 @@ int Ch7_DiffuseMaterial(std::string imgFilePath){
             int ib = int(255.99 * color.b());   imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -501,7 +501,7 @@ int Ch8_MaterialMetal(std::string imgFilePath){
             int ib = int(255.99 * color.b()); imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n"; 
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
     imageFile.close();
     imgFilePath.replace(imgFilePath.find(".ppm"), 4, ".bmp");
@@ -576,7 +576,7 @@ int Ch9_Dielectrics(std::string imgFilePath) {
             int ib = int(255.99 * color.b()); imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n";
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
 
     imageFile.close();
@@ -647,7 +647,7 @@ int Ch10_PositionableCamera(std::string imgFilePath) {
             int ib = int(255.99 * color.b()); imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n";
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
 
     imageFile.close();
@@ -722,7 +722,7 @@ int Ch11_DefocusBlur(std::string imgFilePath) {
             int ib = int(255.99 * color.b()); imgData.push_back(ib);
             imageFile << ir << " " << ig << " " << ib << "\n";
         }
-        rtwProgress.Refresh(g_Height - j);
+        rtwProgress.Refresh();
     }
 
     imageFile.close();
@@ -801,7 +801,7 @@ int Ch12_FinalScene(std::string imgFilePath) {
     //Ch10: free to set aspect,and vertical-fov degree
     vec3 lookFrom(13, 2, 3);
     vec3 lookAt(0, 0, 0);
-    float aperture = 0.1;
+    float aperture = 0.05;
     float aspect = float(g_Width) / float(g_Height);
     //Ch11:加入焦距和光圈概念,模拟散焦模糊(景深)现象
     camera cam(20, aspect, lookFrom, lookAt, vec3(0, 1, 0), aperture,10.0);
@@ -821,7 +821,7 @@ int Ch12_FinalScene(std::string imgFilePath) {
                 int ig = int(255.99 * color.g()); imgData[currPixelPos+1] = ig;
                 int ib = int(255.99 * color.b()); imgData[currPixelPos+2] = ib;
             }
-            rtwProgress.Refresh(j);
+            rtwProgress.Refresh(true);
         }
     };
     int threadNum = std::thread::hardware_concurrency();

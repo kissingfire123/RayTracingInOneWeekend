@@ -14,10 +14,16 @@ public:
         std::cout << "Start to produce image: <<" << imageFilePath << ">> ,please wait...\n";
     }
 
-    void Refresh(int currLine){
+    void Refresh(bool multiThread = false){
         assert(imgTotalLine_ > 0);
-        //std::cout << static_cast<double>(100.0 * currLine/imgTotalLine_) << " %"<< std::endl;
-        print_progress(currLine,imgTotalLine_);
+        if(multiThread){
+            std::lock_guard<std::mutex> lkProgress(mtxProgress_);
+            imgCurrDoneLine_ ++;
+        }
+        else{
+            imgCurrDoneLine_ ++;
+        }
+        print_progress(imgCurrDoneLine_,imgTotalLine_);
     }
 
     ~RtwProgress(){
@@ -30,6 +36,7 @@ public:
 private :
     std::chrono::high_resolution_clock::time_point begin_;
     std::chrono::high_resolution_clock::time_point end_;
+    int imgCurrDoneLine_ = 0;
     int imgTotalLine_ = 0;
     std::mutex mtxProgress_;
     //this function 'print_progress' is copied from Github:https://gist.github.com/juliusikkala/946f505656ed3c35f6c2741f29f26080
